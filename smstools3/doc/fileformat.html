@@ -1,0 +1,811 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <META NAME="Title" CONTENT="SMS Server Tools 3">
+    <META NAME="Robots" CONTENT="INDEX,FOLLOW">
+    <META NAME="Language" CONTENT="English">
+    <title>SMS Server Tools 3</title>
+<STYLE type="text/css">
+BODY {
+  BACKGROUND: #ffffff; MARGIN: 5px 5px 10px; FONT: 10pt verdana, geneva, lucida, arial, helvetica, sans-serif; COLOR: #000000
+}
+td {
+  FONT: 10pt verdana, geneva, lucida, arial, helvetica, sans-serif;
+}
+h3 {
+  background-color: #DCDCFE;
+}
+blockquote {
+  background-color: #FFD;
+  font-size: 90%;
+  padding:5pt;
+  padding-top:1pt;
+  margin-bottom:5pt;
+  border-style: outset;
+  border-color: #aaaa99;
+  border-width: 0.05pt 2pt 2pt 0.05pt;
+}
+blockquote p:first-letter {
+  font-size: 110%;
+  font-weight: bold;
+  color: red;
+}
+</STYLE>
+  </head>
+
+<body>
+<h2><font color=blue><a href="http://smstools3.kekekasvi.com">SMS Server Tools 3</a></font></h2>
+<a href="index.html">Home</a>
+<h3>SMS file format</h3>
+<!-- START --><p>
+<h3>Text messages</h3>
+<p>
+An SMS file is a text file that contains the message and a header. You have to
+store all SM you want to send in these files in the outgoing directory.
+The filename does not matter but it has to be unique. You may use the
+mktemp command to generate unique filenames.
+<p>
+Easy example:
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+To: 491721234567<br>
+<br>
+Hello, this is the sms.
+</font>
+</TD></TR></table>
+<p>
+Write the phone number in <u><b>international format</b></u> without the leading +.
+When you like to send a message to a short number (for example to
+order a ringtone), then preceed it with an "s".
+<p>
+More complex example:
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+To: 491721234567<br>
+Flash: yes<br>
+Alphabet: ISO<br>
+<br>
+Hello Stefan, how are you?
+</font>
+</TD></TR></table>
+<p>
+NOTE: Headers are case-sensitive.
+<p>
+You can add as many header lines, as you like. When the program finds an unknown header, it simply
+ignores that line. You can use the following header lines:
+<p>
+<table border=1 bgcolor=lightgrey>
+
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Alphabet</td>
+    <td>Tells the program what character set is used in this sms file. Possible values are;
+    <p>
+<table border=1 bgcolor="#F0F0F0" width="80%" align=center>
+  <tr>
+    <TD bgcolor=yellow valign=top align=center>binary</TD>
+    <td>The short message contains 8-bit binary data, no text.</td>
+  </tr>
+  <tr>
+    <TD bgcolor=yellow valign=top align=center>GSM</TD>
+    <td>7 bit character set, as described in the GSM specification. </td>
+  </tr>
+  <TR>
+    <TD bgcolor=yellow valign=top align=center>ISO<br>Latin<br>Ansi</td>
+    <td>Normal 8 bit character set, also called Ansi or Latin-9. All three keywords do the same. </td>
+  </TR>  
+  <tr>
+    <TD bgcolor=yellow valign=top align=center>UCS<br>Chinese<br>Unicode</TD>
+    <td>UCS2 character set, maximum 70 characters. All three values do the same. The header must be written with an 8 bit character set but the message text part must be written with the 16 bit Unicode (big endian) character set. Please checkout the scripts directory, it contains some useful scripts for file format conversion. </td>
+  </tr>
+  <tr>
+    <TD bgcolor=yellow valign=top align=center>UTF-8</TD>
+    <td>8 bit multibyte character set. Available in version >= 3.1.16.</td>
+  </tr>
+</table>
+<br clear=all>
+The program checks only the first 3 characters of that line, therefore keywords like ISO-8859-15 or UCS-2 will also work fine.
+<p>
+<b>NOTE the difference of ISO and UTF-8 in version >= 3.1.16:</b>
+</p><p>
+Handling of alphabets is enhanced and all conversions are now done using internal routines
+which work well with cyrillic languages too.
+For backward compatibility, the alphabet of message file still defaults to ISO-8859-15,
+and this can be changed to UTF-8 in the configuration, or a header <i>Alphabet: UTF</i>
+can should be used.
+</p>
+<p><b>Alphabet: ISO</b>
+<ul>
+  <li>
+    depending on the global setting <i>outgoing_utf8</i> (which defaults to <i>yes</i>), UTF-8 is still accepted and converted.
+  </li>
+  <li>
+    optical replacement is done, depending on the modem setting <i>cs_convert_optical</i> (which defaults to <i>yes</i>).
+  </li>
+  <li>
+    characters are converted to the GSM alphabet, and missing characters are dropped.
+  </li>
+</ul>
+</p>
+<p><b>Alphabet: UTF</b>
+<ul>
+  <li>
+    like with ISO, but if any characters cannot be converted to the GSM alphabet,
+    whole message is converted to the UCS2 alphabet.
+  </li>
+  <li>
+    if conversion to UCS2 is done, each message part will have less characters and
+    therefore more parts will be required, but the text delivers as it was written.
+  </li>
+</ul>
+</p>
+    </td>
+  </tr> 
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Autosplit</td>
+    <td>Controls if and how the program splits large text messages. Without this line, the setting from config file is used.
+<p>
+<table border=1 bgcolor="#F0F0F0" width="80%" align=center>
+  <tr><td bgcolor=yellow valign=top>&nbsp;0&nbsp;</td><td>disabled</td></tr>
+  <tr><td bgcolor=yellow valign=top>&nbsp;1&nbsp;</td><td>enabled, no part-number</td></tr>
+  <tr><td bgcolor=yellow valign=top>&nbsp;2&nbsp;</td><td>enabled, text numbers</td></tr>
+  <tr><td bgcolor=yellow valign=top>&nbsp;3&nbsp;</td><td>enabled, concatenated format (not supported by some phones)</td></tr>
+</table>
+ 
+    </td>
+  </tr> 
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Class</td>
+    <td>Number. Available from version >= 3.1.16.<p>
+      Sets the Message Class, 0...3.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>DCS_hex</td>
+    <td>Value. Available from version >= 3.1.16.<p>
+      Sets Data Coding Scheme in the PDU.
+      Note that value must be represented as two hexadecimal digits.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Flash</td>
+    <td>Boolean value. If yes, then the message appears directly on the phones display. Most phones support this feature, but not all.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>From</td>
+    <td>Senders name or phone number. This field has currently no function to the software. </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Hex</td>
+    <td>Boolean value. Available from version >= 3.0.<p>
+Together with <b>Alphabet: binary</b> setting the binary data can be presented in hexadecimal format.<br>
+After version >= 3.1.16 this can be used with text messages other than UCS2 too.<br><br>
+One byte should be presented with two hexadecimal characters, for example <b>0F</b>.
+Text can have empty lines and comment lines starting with /, ', # or : character.
+Also after hexadecimal bytes there can be a comment character marking the rest of line as a comment.
+<p>
+Special keywords available:
+<p>
+<table border=1 bgcolor="#F0F0F0" width="80%" align=center>
+  <tr><td bgcolor=yellow valign=top>STRING:</td><td>A normal string can be presented (without needing to type it in hex)</td></tr>
+  <tr><td bgcolor=yellow valign=top>INLINESTRING:</td><td>As STRING:, but Inline String token and termination null are automatically added</td></tr>
+  <tr><td bgcolor=yellow valign=top>LENGTH</td><td>Set this keyword to the place where the following bytes should be counted.
+Next LENGTH keyword will place the counted number to the place where the first keyword was. 
+Nesting is not possible.</td></tr>
+</table>
+<p>
+See example below for more details.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Include</td>
+    <td>Filename. Available from >= 3.1.<p>
+        Some parts of a message can be read from different file.
+        If an included file contains only text part, it should begin with one empty line.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Language<br>Language_ext</td>
+    <td>Available from version >= 3.1.16.<p>
+      These settings define National Language Shift Tables to be used.
+      Text body must be written using UTF-8 character set.
+      Value can be number, or variable length string which first macthes (case insensitive).
+      <br>Choices are:
+      <ul>
+        <li>0 = basic</li>
+        <li>1 = Turkish</li>
+        <li>2 = Spanish</li>
+        <li>3 = Portuguese</li>
+        <li>4 = Bengali and Assemese, or Bengali, or Assemese</li>
+        <li>5 = Gujarati</li>
+        <li>6 = Hindi</li>
+        <li>7 = Kannada</li>
+        <li>8 = Malayalam</li>
+        <li>9 = Oriya</li>
+        <li>10 = Punjabi</li>
+        <li>11 = Tamil</li>
+        <li>12 = Telugu</li>
+        <li>13 = Urdu</li>
+      </ul>
+      <p>
+      Usually it is not necessary to set <i>Language_ext</i> value.
+      When <i>Language</i> is set, <i>Language_ext</i> defaults to the same,
+      and if only <i>Language_ext</i> is defined, <i>Language</i> defaults to
+      basic character set. If nothing is set, default values are taken from the configuration.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Macro</td>
+    <td>Definition. Available from >= 3.1.<p>
+        Syntax is: <i>Macro: name=value</i>.
+        Multiple macros can be defined.
+        All <i>name</i>'s found in the message body are replaced with a <i>value</i>.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Message_reference</td>
+    <td>Number. Available from version >= 3.1.16.<p>
+      Sets TP-MR field in the PDU. Number can be 0...255.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Ping</td>
+    <td>Boolean value. Available from version >= 3.1.16.<p>
+      Selects the Short Message Type 0, which is also known as a silent SMS.
+      As this kind of SMS is not stored by the receiving device, report
+      is always requested, even if report was disabled in the configuration.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Priority</td>
+    <td>Available from version >= 3.0. Possible value is:
+<p>
+<table border=1 bgcolor="#F0F0F0" width="80%" align=center>
+  <tr><td bgcolor=yellow valign=top>&nbsp;High&nbsp;</td><td>Message is handled first when moving to spooler and when taking from spooler to sending</td></tr>
+</table>
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Provider<br>Queue</td>
+    <td>Name of the provider, can be used to override the normal sorting algorithm configured by [providers] and [queues] in the config file. Both keywords do the same.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Reject_duplicates</td>
+    <td>Boolean value. Available from version >= 3.1.16.<p>
+      Sets TP-RD bit in the PDU.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Replace</td>
+    <td>Numeric code 1...7. Available from >= 3.0.9.<p>
+      If a receiving device and SIM supports "Replace Short Message Type n" -feature, a previously
+      received message with the same code is replaced with a new message. Only the messages sent from
+      the same originating address can be replaced. If there is nothing to replace, a message is stored
+      in the normal way.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Reply_path</td>
+    <td>Boolean value. Available from version >= 3.1.16.<p>
+      Sets TP-RP bit in the PDU.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Report</td>
+    <td>Boolean value. Controls if a status report is requested for this message. Without this line, the setting from config file is used.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Retries</td>
+    <td>Number. Available from version >= 3.1.16.<p>
+      Defines how many times smsd will retry if sending fails. This overrides <i>send_retries</i> setting.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>SMSC</td>
+    <td>Phone number of the SMSC. From version >= 3.1 this setting is ignored if there is no smsc set in the config file.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>System_message</td>
+    <td>Boolean value. Available from version >= 3.1.<p>
+      With this setting message is sent as a system message.
+      This kind of message has fixed values 0x40 for Protocol Identifier and 0xF4 for Data Coding Scheme.
+      A message cannot have User Data Header.
+      Maximum length of a message is 140 bytes.
+      <p>
+      After version >= 3.1.7, value for this setting can be <i>2</i> or <i>ToSIM</i> for communicating with SIM applications.
+      SMS is sent as <i>SS</i> (no show) and stored (sent) to SIM.
+      Currently this only works with binary messages.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Text_is_pdu</td>
+    <td>Boolean value. Available from version >= 3.1.16.<p>
+      If this feature is enabled by defining <i>text_is_pdu_key</i> in the configuration,
+      and <i>To:</i> number matches that key, message body is handled as ready made PDU.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>To</td>
+    <td>Receivers phone number in <u><b>international format</b></u> without the leading +. 
+        When you like to send a message to a short number (for example to order a ringtone), then preceed it with an "s".
+        With version >= 3.1 the number can be given using grouped format, like <i>358 12 345 6789</i>.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>To_TOA</td>
+    <td>Available from version >= 3.1.5. Can be used to define receivers Type Of Address. This is also called "numbering plan". Possible values are
+<p>
+<table border=1 bgcolor="#F0F0F0" width="80%" align=center>
+  <tr><td bgcolor=yellow valign=top>&nbsp;Unknown&nbsp;</td><td>No type is defined. Short numbers preceeded with "s" uses this value by default.</td></tr>
+  <tr><td bgcolor=yellow valign=top>&nbsp;International&nbsp;</td><td>Number is international. This is default for other than short numbers.</td></tr>
+  <tr><td bgcolor=yellow valign=top>&nbsp;National&nbsp;</td><td>Number is national. No country code is included. Some short numbers only work with this value.</td></tr>
+</table>
+<p>
+See <a href="#using_toa">Using Type Of Address selection</a> for more details.
+<p>
+    </td>
+  </tr> 
+
+  <tr>
+    <td bgcolor=yellow valign=top>UDH</td>
+    <td>Only binary messages: Boolean value, tells if the message data contains a user data header. Default is true.</td>
+  </tr>
+
+  <tr>
+    <td bgcolor=yellow valign=top>UDH-DATA</td>
+    <td>User data header in hex-dump format. See <a href="udh.html">udh.html</a> and GSM 03.38. From version >= 3.1 also binary message can have UDH-DATA defined.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Validity</td>
+    <td>Available from version >= 3.0. Defines a message validity period.
+Without this line, the setting from config file is used.<br>
+<br>
+You can specify value as a number following one of the keywords: <b>min</b>, <b>hour</b>, <b>day</b>, <b>week</b>, <b>month</b> or <b>year</b>.
+Validity period will be rounded down to the nearest possible value.<br>
+<br>
+If you do not use any of those keywords, value will have the following meaning:
+<p>
+<table border=1 bgcolor="#F0F0F0" width="80%" align=center>
+  <tr><td bgcolor=yellow valign=top>0 ... 143</td><td>(value + 1) * 5 minutes (i.e. 5 minutes intervals up to 12 hours)</td></tr>
+  <tr><td bgcolor=yellow valign=top>144 ... 167</td><td>12 hours + ((value - 143) * 30 minutes) (i.e. 30 min intervals up to 24 hours)</td></tr>
+  <tr><td bgcolor=yellow valign=top>168 ... 196</td><td>(value - 166) * 1 day (i.e. 1 day intervals up to 30 days)</td></tr>
+  <tr><td bgcolor=yellow valign=top>197 ... 255</td><td>(value - 192) * 1 week (i.e. 1 week intervals up to 63 weeks)</td></tr>
+</table>
+<p>
+Incorrect values are ignored.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Voicecall</td>
+    <td>Boolean value. Available from version >= 3.0.<p>
+With this feature the smsd will make a voice call to the receivers phone number given in To: header. 
+If the receiver answers to the call, some DTMF tones are played.<br>
+The message text must start with TONE: keyword. After this there can be number and space, which is number of times to repeat the tone sending.
+Supported tones are #,*,0...9 and the tone list must be comma separated. <br>For example:<br>
+<b>TONE: &nbsp; 1,2,3,4,5,6,7,8,9,0</b><br>
+- this plays all digits, and it's repeated 3 times which is the default.<br>
+<br>
+<b>TONE: &nbsp; 5 &nbsp; #,#,#</b><br>
+- this plays three #'s, and it's repeated 5 times.<br>
+<br>
+<b>TONE:</b><br>
+- some default tones are played 3 times.<br>
+<br>
+After version >= 3.1 additional <i>TIME: number</i> definition can be used. 
+After a time has reached, hang up is done.
+If a call is answered before a time is reached, normal sound playing is done.
+NOTE that this time counting starts after a command is given to the modem and there will be
+some delay before receiving device starts ringing.
+You should test this with your own handset to find a reasonable time which works fine in the network you are using.
+Example:<br>
+<b>TONE: &nbsp; TIME: &nbsp; 15 &nbsp; 2 &nbsp; #</b><br>
+<br>
+Before using this feature to serious alarm purposes, you should test if this works with you modem/phone. 
+Also notice that automatic redialing should be turned off in the phone's settings.
+<br>
+<br>
+After version 3.1.3 VTS command usage can be selected with <i>voicecall_vts_list</i> setting, 
+see the <a href="configure.html">How to configure</a> for more details.
+<br>
+<br>
+After version 3.1.5 there is a new <i>voicecall_ignore_modem_response</i> setting for problematic devices,
+see the <a href="configure.html">How to configure</a> for more details.
+Also notice <i>voicecall_hangup_ath</i> setting if AT+CHUP does not hangup call on your device.
+<br>
+<br>
+After version 3.1.7 there is a <i>voicecall_cpas</i> setting available.
+If your device returns OK immediately after a dial command, with this setting AT+CPAS can be used to detect when a call is answered.
+With this setting <i>TIME:</i> has no effect.
+    </td>
+  </tr>
+
+</table>
+
+<p>
+Note: In case of boolean values you can use true, yes, on or 1 for positive values. All other words are interpreted as negative.
+<p>
+Available from >= 3.0. 
+After a message is sent, there will be automatically generated Message_id header line <b>if</b> a status report was requested.
+With version >= 3.1 there will also be Sent timestamp:
+<table border=1 bgcolor=lightgrey>
+  <tr><td  bgcolor=yellow valign=top>Message_id</td><td>ID number of a sent message.</td></tr>
+  <tr><td  bgcolor=yellow valign=top>Sent</td><td>Time when the message was sent by the program.</td></tr>
+</table>
+<p>
+Available from >= 3.0.6.
+<table border=1 bgcolor=lightgrey>
+  <tr>
+    <td  bgcolor=yellow valign=top>Modem</td>
+    <td>Name of the modem which was used to send this message.</td>
+  </tr>
+</table>
+<p>
+Available from >= 3.0.9.
+<table border=1 bgcolor=lightgrey>
+  <tr>
+    <td  bgcolor=yellow valign=top>IMSI</td>
+    <td>International Mobile Subscriber Identity from the SIM,
+        if this request is supported.</td>
+  </tr>
+</table>
+<p>
+Available from >= 3.1.16.
+<table border=1 bgcolor=lightgrey>
+  <tr>
+    <td  bgcolor=yellow valign=top>IMEI</td>
+    <td>IMEI of a modem which handled the message.</td>
+  </tr>
+  <tr>
+    <td  bgcolor=yellow valign=top>NOTICE</td>
+    <td>Tells if some characters was not possible to convert to the target character set.</td>
+  </tr>
+</table>
+<p>
+Available from >= 3.1.20.
+<table border=1 bgcolor=lightgrey>
+  <tr>
+    <td  bgcolor=yellow valign=top>Sending_time</td>
+    <td>Tells how long it took to send the whole message.
+        If the message has multiple parts and <i>receive_before_send</i> is set to <i>yes</i>,
+        time to receive messages is included in this value.</td>
+  </tr>
+</table>
+
+<p>
+<a name="binary_data"><h3>Binary data</h3></a>
+<p>
+The data begins after the empty line and goes until end of file. No conversion is applied to the data. 
+<p>
+Example:
+<p>
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+To: 491721234567<br>
+Alphabet: binary<br>
+UDH: true<br>
+<br>
+gs2389gnsakj92"§Z/%$§"($)$(%ÄÖÜ?))((HJHG&amp;(()/&amp;§")(LJUFDZ)=W)==/685tgui<br>
+3ge^!"§$EGHWZFT&amp;Z%8785ttghjjhdjkgfjsbfjwr793thruewgfh7328hgtwhg87324hf<br>
+hwer32873g&amp;%§=)(/&amp;%$%&amp;/(/&amp;%$§%&amp;hdsgrwwq(/&amp;%$fgzw543t43g5jwht934zt743g
+</font>
+</TD></TR></table>
+<p>
+<a name="wap_push">
+Another example, Wap Push with Hex presentation, available from version >= 3.0:
+</a>
+<p>
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+To: 358401234567<br>
+Alphabet: binary<br>
+Hex: yes<br>
+<br>
+// This is a sample Wap Push message:<br>
+<br>
+06 : user Data Header Length (6 Octets)<br>
+05 : Identifer Element (16 Bit port addressing)<br>
+04 : Length of Parameter values (4 Octets)<br>
+# WAP Push connectionless session service (client side), Protocol: WSP/Datagram:<br>
+0B 84 : push dest port (2948)<br>
+# WAP connectionless session service Protocol: WSP/Datagram:<br>
+23 F0 : push originator port (9200)<br>
+<br>
+01 : Push Transaction Id<br>
+06 : PDU Type Push, (WAP-230-WSP Table 34)<br>
+<b>LENGTH</b> // Headers Length will be placed to this position<br>
+AE : Push Header Content-Type: application/vnd.wap.sic 0x2E | 0x80<br>
+# (<a href="http://www.wapforum.org/wina/wsp-content-type.htm" target="_blank">http://www.wapforum.org/wina/wsp-content-type.htm</a>)<br>
+<b>LENGTH</b> // This stops the counting and places the number<br>
+<br>
+02 : WBXML version 1.2<br>
+05 : SL 1.0 Public Identifier<br>
+04 : Charset=ISO-8859-1<br>
+00 : String table length<br>
+45 : si, with content<br>
+C6 : indication, with content and attributes<br>
+0D : Token for "href=http://www."<br>
+### There should not be extra spaces after keyword:<br>
+<b>INLINESTRING:</b>xyz<br>
+85 : Token for ".com/"<br>
+03 : Inline string follows<br>
+<b>STRING:</b>ppaid/123/abc.wml<br>
+00 : End of string<br>
+11 : si-id<br>
+INLINESTRING:1<br>
+01 : close of indication attribute list<br>
+INLINESTRING:Wap push demo from smstools3.<br>
+01 : End of indication element<br>
+01 : END of si element<br>
+<br>
+# Specifications can be found from here:<br>
+# <a href="http://www.openmobilealliance.org/tech/affiliates/wap/wapindex.html" target="_blank">
+http://www.openmobilealliance.org/tech/affiliates/wap/wapindex.html</a><br>
+</font>
+</TD></TR></table>
+<p>
+
+<p>
+<a name="wap_push_macros_include">
+Example of Wap Push with Macros and Include file:
+</a>
+<p>
+In this example message body is the same for all messages, and it is saved as different file.
+This file is included to the file which is sent by smstools. Macros are used.
+Outgoing file contains only headers which are mandatory, and <u>no message body at all</u>.
+<p>
+File: /var/spool/sms/outgoing/wap_push1
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+To: 358401234567<br>
+Macro: <b>@URL@</b>=smstools3.kekekasvi.com/board.php<br>
+Macro: <b>@TEXT@</b>=Visit the SMS Server Tools 3 forum.<br>
+Include: /var/spool/sms/include/wap_push_service1<br>
+</font>
+</TD></TR></table>
+<p>
+File: /var/spool/sms/include/wap_push_service1
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+Alphabet: binary<br>
+Hex: yes<br>
+<br>
+06 05 04 0B 84 23 F0 01 06 01 AE 02 05<br>
+6A : Charset=UTF-8 (MIBEnum 106)<br>
+00 45 C6<br>
+0C : Token for "href=http://"<br>
+INLINESTRING:<b>@URL@</b><br>
+11<br>
+INLINESTRING:1<br>
+01<br>
+INLINESTRING:<b>@TEXT@</b><br>
+01 01<br>
+</font>
+</TD></TR></table>
+
+<h3>Received messages</h3>
+<p>
+The received SMS are stored in the same format as described above but they have some additional header lines. For example:
+<p>
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+From: 491721234567<br>
+From_SMSC: 491722270333<br>
+Sent: 00-02-21 22:26:23<br>
+Received: 00-02-21 22:26:29<br>
+Subject: modem1<br>
+Alphabet: ISO<br>
+UDH: false<br>
+<br>
+This is the Text that I have sent with my mobile phone to the computer.<br>
+</font>
+</TD></TR></table>
+<p>
+
+<table border=1 bgcolor=lightgrey>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Alphabet</td>
+    <td>Tells the character set of the message text.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Flash</td>
+    <td>Available from >= 3.1.
+        Boolean value. This header exists if a message was received as a flash (immediate display).
+        Note that usually phone devices do not save flash messages, they can be saved manually if necessary.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>From</td>
+    <td>Senders phone number.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>From_SMSC</td>
+    <td>The SMS service centre, that sent you this message.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>From_TOA</td>
+    <td>Available from >= 3.0.9. Type Of Address definition of senders phone number.<br>
+        For example: "91 international, ISDN/telephone".</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>IMSI</td>
+    <td>Available from >= 3.0.9. International Mobile Subscriber Identity from the SIM,
+        if this request is supported.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Length</td>
+    <td>Available from >= 3.1.
+        Length of text / data. With Unicode text number of Unicode characters.
+        If non-Unicode text message is stored using UTF-8, number of bytes may differ.
+    </td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Received</td>
+    <td>Time when the message was received by the program.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Replace</td>
+    <td>Available from >= 3.0.9. Replace Short Message Type 1..7 number, if defined.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Report</td>
+    <td>Available from >= 3.0.9. Tells if a status report is going to be returned to the SME.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Sent</td>
+    <td>Time when the message was sent.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>Subject</td>
+    <td>The name of the modem that received this message.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>UDH</td>
+    <td>Boolean value. Tells if the message contains a user data header.</td>
+  </tr>
+
+  <tr>
+    <td  bgcolor=yellow valign=top>UDH-DATA</td>
+    <td>This is the UDH in hex-dump format if the message contains an UDH. See <a href="udh.html">udh.html</a> and GSM 03.38.</td>
+  </tr>
+
+</table>
+<br>
+From version >= 3.0.9 there can be additional headers in case of some problems:
+<table border=1 bgcolor=lightgrey>
+  <tr>
+    <td  bgcolor=yellow valign=top>Error</td>
+    <td>Tells if there was fatal errors and a message was not decoded.<br>
+        Text part of message will tell more details and has no usual content.</td>
+  </tr>
+  <tr>
+    <td  bgcolor=yellow valign=top>Warning</td>
+    <td>Tells if there was minor proglems in the message data.</td>
+  </tr>
+</table>
+<p>
+The filenames of received messages look like <i>modem1.xyzxyz</i>. They begin with the name of the modem that received the message, followed by a dot, followed by six random characters.
+<p>
+<h3>Status Reports</h3>
+<p>
+You can request and receive status reports, if the SMSC and your modem support this feature. Example:
+<p>
+<table border=1 bgcolor=lightgrey><TR><TD>
+<font face="Courier New, Courier, monospace">
+From: 491721234567<br>
+From_SMSC: 491722270333<br>
+Sent: 00-02-21 22:26:23<br>
+Received: 00-02-21 22:26:29<br>
+Subject: modem1<br>
+Alphabet: ISO<br>
+UDH: false<br>
+<br>
+SMS STATUS REPORT<br>
+Message_id: 117<br>
+Discharge_timestamp: 00-02-21 22:27:01<br>
+Status: 0,Ok,short message received by the SME
+</font>
+</TD></TR></table>
+<p>
+<p>
+<table border=1 bgcolor=lightgrey>
+  <tr>
+    <td  bgcolor=yellow valign=top>Discharge_timestamp</td>
+    <td>This is the time, when the message was successfully delivered or when it was discarded by the SMSC.</td>
+  </tr>
+  <tr>
+    <td  bgcolor=yellow valign=top>Message_id</td>
+    <td>This is the ID number of the previously sent message, where this status report belongs to. 
+The SMSC gives each sent message such a number.</td>
+  </tr>
+  <tr>
+    <td  bgcolor=yellow valign=top>Status</td>
+    <td>The status of the message. Please take a look into the source code <b>src/pdu.c</b> if you need a list of all possible status codes.</td>
+  </tr>
+</table>
+
+<p>
+<a name="using_toa"><h3>Using Type Of Address selection</h3></a>
+<p>
+When SMSTools sends a message, it must tell to the Service Center what kind of number is used as a destination number.
+This is called "Type Of Address". There are three possible values: "unknown", "international" and "national".
+<p>
+By default SMSTools assumes that:
+<ul>
+  <li>Any number without "s" is an <b>international</b> number.</li>
+  <li>Numbers with "s" are "short" numbers and <b>unknown</b> Type Of Address is used.</li>
+</ul>
+<p>
+However, all "short" numbers do not work with "unknown" type.
+This is an operator depended issue and varies by country.
+Because of this, version >= 3.1.5 has a new header <b>To_TOA</b> which can be used to manually define Type Of Address.
+<p>
+Type Of Address selection can be automated using two global settings in the configuration file: <i>international_prefixes</i> and <i>national_prefixes</i>.
+Both settings are comma separated list of numbers.
+<p>
+<b>If</b> international_prefixes is defined, Type Of Address is international <b>only if</b> number matches to the list.
+If it does not match, national Type Of Address is used.
+<p>
+<b>If</b> national_prefixes is defined, Type Of Address is national if number matches to the list.
+<p>
+And last, if there is To_TOA defined in the message file, this setting is used as it overrides everything else.
+<p>
+For example: 
+<p>
+<ul>
+System is located in Finland and it's used to send messages mainly to Finland, Sweden and United Kingdom.
+Both international and national number formats are used (for finnish numbers) and local short numbers should use national Type Of Address.
+Global configuration setting <i>international_prefixes = 358,46,44</i> is enough for normal operation.
+With this setup, if SMS should be sent to Germany, it can be done with <i>To_TOA: international</i> header.
+</ul>
+<p>
+Another example:
+<p>
+<ul>
+Still in Finland. Any mobile phone number should work without additional headers.
+Messages to the short numbers use "s" or will have To_TOA header if necessary.
+Global configuration setting <i>national_prefixes = 04, 05</i> or shortly <i>national_prefixes = 0</i> is enough as finnish mobile numbers start with 04 or 05.
+Messages to those numbers are sent using national Type Of Address, any other number will use international type.
+</ul>
+<p>
+
+<hr>
+</body>
+</html>

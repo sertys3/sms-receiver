@@ -1,0 +1,253 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <META NAME="Title" CONTENT="SMS Server Tools 3">
+    <META NAME="Robots" CONTENT="INDEX,FOLLOW">
+    <META NAME="Language" CONTENT="English">
+    <title>SMS Server Tools 3</title>
+<STYLE type="text/css">
+BODY {
+  BACKGROUND: #ffffff; MARGIN: 5px 5px 10px; FONT: 10pt verdana, geneva, lucida, arial, helvetica, sans-serif; COLOR: #000000
+}
+td {
+  FONT: 10pt verdana, geneva, lucida, arial, helvetica, sans-serif;
+}
+h3 {
+  background-color: #DCDCFE;
+}
+blockquote {
+  background-color: #FFD;
+  font-size: 90%;
+  padding:5pt;
+  padding-top:1pt;
+  margin-bottom:5pt;
+  border-style: outset;
+  border-color: #aaaa99;
+  border-width: 0.05pt 2pt 2pt 0.05pt;
+}
+blockquote p:first-letter {
+  font-size: 110%;
+  font-weight: bold;
+  color: red;
+}
+</STYLE>
+  </head>
+
+<body>
+<h2><font color=blue><a href="http://smstools3.kekekasvi.com">SMS Server Tools 3</a></font></h2>
+<a href="index.html">Home</a>
+<h3>Frequently Asked Questions</h3>
+<!-- START -->
+<p>
+  1) <a href="#1">What hardware do I need?</a><br>
+  2) <a href="#2">How fast are the SMS server tools?</a><br>
+  3) <a href="#3">My GSM modem hangs often</a><br>
+  4) <a href="#4">Can I change the sender ID of sent messages?</a><br>
+  5) <a href="#5">How can I resend failed messages?</a><br>
+<p>   
+  6) <a href="#6">Command echoes are missing some characters</a><br> 
+  7) <a href="#7">My modem does not answer to any AT-Commands</a><br>
+  8) <a href="#8">Error Message: Modem is not clear to send</a><br>  
+  9) <a href="#9">Received messages or answers to AT commands contain often garbage.</a><br>
+  10) <a href="#10">How can I check the modem manually</a><br>
+<p>  
+  11) <a href="#11">What means +CMS ERROR 512?</a><br>
+  12) <a href="#12">Why does my modem answer ERROR?</a><br> 
+  13) <a href="#13">I cannot receive messages</a><br>
+  14) <a href="#14">I cannot send messages</a><br>  
+  15) <a href="#15">Error loading libmm.so.11</a><br>
+<p>
+  16) <a href="#16">Can smart phones be used to receive messages?</a><br>
+<p>
+
+<p><b><a name="1"></a>1) What hardware do I need?</b><br>
+  You need a Computer with at least one serial port.
+  It does not matter how fast the CPU is and how much memory you installed. 
+  You also need at least one GSM modem with SMS command set according to the european specification GSM 07.05 (=ETSI TS 300 585),
+  a character-based interface with hex-encoded binary transfer of message blocks ("PDU Mode") of it,
+  and alphabet support according to the GSM 03.38 (=ETSI TS 100 900).
+  <p>
+  The software runs on Windows and all Unix-Style operating systems.
+
+<p><b><a name="2"></a>2) How fast are the SMS Server Tools?</b><br>
+  The performance depends on the number of modems that you use and on the modem itself. 
+  Sending a single message takes between 5 and 10 seconds. 
+  You can increase the performance by using up to 64 modems.
+
+<p><b><a name="3"></a>3) My GSM modem hangs often</b><br>
+  This is mostly caused by a weak power supply. 
+  Most GSM modems of Falcom and Siemens work with a 12V 800mA power supply.
+  You may try to add a capaciator at the power supply (2200µF/25V) 
+  or change to a stabilized power supply.
+
+<p><b><a name="4"></a>4) Can I change the sender ID of sent messages?</b><br>
+  This software uses the signalling channel that is limited to the senders phone number only. 
+  You cannot change it. If you really need that feature, you need a large-account to the SMSC 
+  and another software, for example SendXMS. Be prepared to very high costs.
+
+<p><b><a name="5"></a>5) How can I resend failed messages?</b><br>
+  The program does already two retries. If you need more, then simply
+  move the files from the failed directory to the outgoing directory. 
+  You can use the script smsresend to do that. 
+  This script inserts a retry counter so that the number of retries per message can be limited. 
+  Run this script with a timer (for example cron) if you need automatic retries.
+
+<p><b><a name="6"></a>6) Command echoes are missing some characters</b><br>
+  You see in the logfile that the commands are echoed by the modem. 
+  But the echoes from the modem are missing some characters and therefore the modem does not 
+  answer or answers with ERROR. This happens when the modem or cable does not support hardware 
+  handshake and when the handshake wires are simply bridged. Try a lower bitrate or use the
+  send_delay option in the config file to make the program even slower. But to make it really 
+  stable and fast, it's highly recommend to replace the bad hardware.
+
+<p><b><a name="7"></a>7) My modem does not answer to any AT-Commands</b><br>
+  You probably set a wrong baudrate or a wrong serial port name. If both are ok, then ensure 
+  that no other program is currently using the serial port already. Many unix systems have a 
+  "getty" program for login through the serial port that you probably need to disable. 
+  The command <b>lsof</b> might be helpful to check this. If this is Ok, then check the modem 
+  manually.
+  <p> 
+  It could bee a good idea to test the modem under another operating system (for example Windows 
+  or Knoppix) and it might also help to check if another modem is accessible on that suspicious serial port. 
+
+<p><b><a name="8"></a>8) Error Message: Modem is not clear to send</b><br>
+  The modem does not signal that it is ready to accept commands. The CTS wire is not activated. 
+  This can be caused by a broken cable, missing CTS wire or missing hardware handshake support in your hardware.
+  <p>
+  Try to disable hardware handshake in the config file and use the lowest possible baudrate.
+
+<p><b><a name="9"></a>9) Received messages or modem answers contain often garbage</b><br>
+  This is mostly caused by missing hardware handshake, but it can also be caused by a too high serial bitrate. 
+  Try 2400 baud, this will have only minor effect to the overall performance.
+  If this does not help, then try to use the send_delay option in the config file to make the program even slower.
+  <p> 
+  Another cause might be that another program accesses the same serial port while the SMS Server Tools 
+  are talking to the modem.
+
+<p><b><a name="10"></a>10) How can I check the modem manually?</b><br>
+  Check the modem using a terminal program like Hyperterminal, minicom or tip. Use the
+  9600 or 19200 baud, no parity, 8 bit, 1 stopbit. Enable hardware handshake (RTS/CTS) because this software 
+  also needs this. Here are some interesting AT-commands that you might try to enter:
+<p>
+<table border="1" cellspacing="0" cellpadding="0">
+  <tr>
+    <td bgcolor=yellow valign=top><b>Command</b></td>
+    <td bgcolor=yellow valign=top><b>Answer</b></td>
+    <td bgcolor=yellow valign=top><b>Meaning</b></td>
+  </tr>  <tr>
+    <td>AT</td>
+    <td>OK</td>
+    <td>Serial cable works and current serial settings are useable &nbsp; </td>
+  </tr>  <tr>
+    <td>AT+CPIN?</td>
+    <td>READY &nbsp; </td>
+    <td>The modem knows the PIN already</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>PIN</td>
+    <td>The modem needs the PIN number</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>PUK</td>
+    <td>The modem needs the PUK (the pin is locked)</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>ERROR</td>
+    <td>The SIM card if not found</td>
+  </tr>  <tr>
+    <td>AT+CPIN=1111</td>
+    <td>OK</td>
+    <td>Enter the PIN</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>ERROR</td>
+    <td>The PIN is wrong or it was entered before</td>
+  </tr>  <tr>
+    <td>AT+CPIN=12345678,1111 &nbsp; </td>
+    <td>OK</td>
+    <td>Enter the fixed PUK and set a new PIN</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>ERROR</td>
+    <td>The PUK is wrong</td>
+  </tr>  <tr>
+    <td>AT+CREG?</td>
+    <td>0,1</td>
+    <td>The modem is connected to the phone network</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>0,2</td>
+    <td>The modem is connecting to the phone network</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>0,5</td>
+    <td>The modem is connecting to a roaming partner network</td>
+  </tr>  <tr>
+    <td>&nbsp;</td>
+    <td>other</td>
+    <td>The modem is not connected to the network</td>
+  </tr>
+</table>
+  
+<p><b><a name="11"></a>11) What means +CMS ERROR 512?</b><br>
+  This error code should be described in the modems manual. There are a lot of possible
+  reasons. Most users see this error code when they try to send a message while the modem received another one 
+  at the same time. This causes a collision in the message transfer protocol between modem and SMSC. There 
+  is nothing you can do against this, therefore the software retries sending 2 times after an ERROR.
+
+<p><b><a name="12"></a>12) Why does my modem answer ERROR?</b><br>
+  Normaly the modem manual should contain a description of every command incuding possible ERROR causes. 
+  Some modems support the command AT+CMEE=1 to get more informations about the ERROR cause. 
+  You can try to put this command into the init-string.
+
+<p><b><a name="13"></a>13) I cannot receive messages</b><br>
+  First check that you have defined a modem to receiving. Default value for setting <i>incoming</i>
+  is <i>no</i>.
+  <p>
+  Some modems store received messages in the internal memory instead of the SIM card but only the SIM 
+  card memory is accessible via serial port. In this case, the init-string AT+CPMS="SM","SM","SM" tells the 
+  modem to store all messages on the SIM card (SM). To store messages in the internal memory, use "ME" instead. 
+  Some modem do not accept three values in this command and answer with ERROR. In this case, try only one 
+  value: AT+CPMS="SM". Another possible setting is "MT" which tells the modem to access both memory locations. 
+  Falcom Samba and maybe some other modems ignore the AT+CPMS command. In this case, try AT^SSMSS=1 instead.
+  <p>
+  Some modems route received messages directly to the terminal and do not store messages on the SIM card.
+  To disable this routing use the init-string like AT+CNMI=2,0,0,2,1. Check the manual of modem for
+  correct values.
+
+<p><b><a name="14"></a>14) I cannot send messages</b><br>
+  First check that the destination number is given using international format.
+  If this does not help, define a correct SMSC number in the config file.
+  Note that this number must also be given using international format.
+  This setting often helps when the default SMSC number that is stored on the SIM card is wrong or missing.
+
+<p><b><a name="15"></a>15) Error loading libmm.so.11.</b><br>
+  If you see an error message like this when you start smsd, then the operating system did not find the file 
+  libmm.so.11. Add the correct path (probably /usr/local/lib) to the environment variable <b>LD_LIBRARY_PATH</b>. 
+  GNU/Linux users can also set the path in <b>/etc/ld.so.conf</b>. 
+
+<p><b><a name="16"></a>16) Can smart phones be used to receive messages?</b><br>
+  Usually no. Smart phones do not show incoming messages to the AT command interface.
+  Those devices can be used for sending only.<br>
+  Generally:
+  <ul>
+    <li>
+      Nokia phones based on S60: can send but cannot receive.
+    </li>
+    <li>
+      Nokia phones based on S40 3rd edition: can send but cannot receive.
+    </li>
+    <li>
+      Nokia phones based on S40 before 3rd edition: can send and can also receive.
+    </li>
+    <li>
+      Sony Ericsson phones except some using Symbian user interface: can send and can also receive.
+    </li>
+  </ul>
+
+<hr>
+If you did not find an answer to your question, please visit the <a href="http://smstools3.kekekasvi.com?p=support">SMSTools3 Community</a>.
+
+<hr>
+</body>
+</html>
