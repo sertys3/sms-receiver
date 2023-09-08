@@ -1,5 +1,7 @@
 # Scripts for receiving SMS on a consumer grade SIM bank
 
+## The full story behind this repository may be found here : https://medium.com/@sertys/building-a-128-256-sim-card-bank-with-consumer-tech-on-the-cheap-884ea1b3874c
+
 ## SMSTools3 code
 I have very slightly modified the SMSTools3 server code to raise a specific alarm for when it successfuly checks a SIM card for messages. I have integrated this into a dashboard to see which SIMs have potential problems( this happens more often that one wishes).
 
